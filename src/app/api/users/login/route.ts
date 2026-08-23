@@ -4,8 +4,25 @@ import User  from "@/models/userModel.js";
 import { NextResponse , NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { sendEmail } from "@/helpers/mailer";
 
 connectDB();
+export const forgotPassword = async (email : string) => {
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            throw new Error("User not found");
+        }
+        await sendEmail({
+            email: email,
+            emailType: "RESET",
+            userId: user._id
+        });
+    } catch (error) {
+        console.error("Error occurred while sending forgot password email:", error);
+        throw new Error("Failed to send forgot password email");
+    }
+};
 
 export async function POST(request:NextRequest) {
     
@@ -35,7 +52,7 @@ export async function POST(request:NextRequest) {
         };
 
         // create token
-        const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET , {expiresIn:"1h"});
+        const token = jwt.sign(tokenData, process.env.TOKEN_SECRET || "" , { expiresIn: "1h" });
 
         const response = NextResponse.json({
             message:"User logged in successfully", 

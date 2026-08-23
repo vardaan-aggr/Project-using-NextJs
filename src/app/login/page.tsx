@@ -33,13 +33,31 @@ export default function LoginPage() {
             // router.push(`/profile/${response.cookies.get("token").value}`);
             
         }catch(error : any){
-            console.log(error.message);
+            console.log(error?.response?.data || error.message);
             toast.error("Login failed");
 
          }finally{
             setLoading(false);
          }
     }
+
+    const onForgotPassword = async () => {
+        try {
+            if (!user.email) {
+                toast.error("Please enter your email first");
+                return;
+            }
+
+            setLoading(true);
+            await axios.post("/api/users/forgotpassword/request", { email: user.email });
+            toast.success("Password reset email sent");
+        } catch (error: any) {
+            console.log(error?.response?.data || error.message);
+            toast.error(error?.response?.data?.message || "Failed to send reset email");
+        } finally {
+            setLoading(false);
+        }
+    };
     useEffect(() => {
         if(user.email.length > 0 && user.password.length > 0){
             setButtonDisabled(false);
@@ -74,10 +92,18 @@ export default function LoginPage() {
             <button
             className = "bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors duration-300"
              onClick={onLogin}
-             >Login</button>
+             disabled={buttonDisabled || loading}
+             >
+                {loading ? "Logging in..." : "Login"}
+            </button>
              <Link href="/signup" className="text-blue-500 hover:underline">
                 Visit Signup Page
              </Link>
+
+             <Link href="/forgotpassword/request" className="text-blue-500 hover:underline">
+                Forgot Password 
+             </Link>
+              
         </div>
     )
 }

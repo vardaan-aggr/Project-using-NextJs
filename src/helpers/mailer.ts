@@ -27,7 +27,7 @@ export const sendEmail = async ({email,emailType,userId} : any) =>{
         const smtpSecure = process.env.SMTP_SECURE === "true";
         const smtpUser = process.env.SMTP_USER;
         const smtpPass = process.env.SMTP_PASS;
-        
+
         if(!smtpHost || !smtpUser || !smtpPass){
             throw new Error("Missing SMTP configuration. Set SMTP_HOST, SMTP_USER, and SMTP_PASS in .env.");
         }
@@ -43,11 +43,13 @@ export const sendEmail = async ({email,emailType,userId} : any) =>{
         });
 
         const mailOptions = {
-            from : process.env.SMTP_FROM || smtpUser,
+            from : process.env.SMTP_FROM,
             to : email,
             subject : emailType === "VERIFY" ? "Verify your email" : "Reset your password",
             html : `
-                <p>Click <a href="${process.env.DOMAIN}/verifyemail?token=${encodeURIComponent(hashedToken)}">here</a> to ${emailType === "VERIFY" ? "verify your email" : "reset your password"}.</p>
+                <p>Click <a href="${process.env.DOMAIN}/${emailType === "VERIFY" ? "verifyemail" : "forgotpassword"}?token=${encodeURIComponent(hashedToken)}">here</a> to ${emailType === "VERIFY" ? "verify your email" : "reset your password"}.</p>
+                <p>Alternatively, copy and paste the link below into your browser:</p>
+                <p>${process.env.DOMAIN}/${emailType === "VERIFY" ? "verifyemail" : "forgotpassword"}?token=${encodeURIComponent(hashedToken)}</p>
             `
         };
 
@@ -55,6 +57,7 @@ export const sendEmail = async ({email,emailType,userId} : any) =>{
         return mailResponse;
 
     }catch(error : any){
+        console.error("Error sending email:", error);
         throw new Error(`Failed to send email: ${error.message}`);
     }
 }
