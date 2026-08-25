@@ -12,6 +12,9 @@ export async function GET() {
          const cookieStore = await cookies();
 
         const token = cookieStore.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "No token found" }, { status: 401 });
+        }
 
         const decoded = jwt.verify(token, process.env.TOKEN_SECRET!);
 
